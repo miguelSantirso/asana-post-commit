@@ -16,7 +16,7 @@ origin_url=$(git config --get remote.origin.url)
 repo_path_pattern='.*\.\w+[:\/](.+)\.git'
 if [[ "$origin_url" =~ [:\/](.+)\.git ]]; then
     repo_url=${BASH_REMATCH[1]}
-    repo_url="https://bitbucket.org/${repo_url}/"
+    repo_url="https://bitbucket.org/${repo_url}/commits/"
 fi
 
 # hold the closed ticket numbers
