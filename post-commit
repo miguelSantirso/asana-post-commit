@@ -1,18 +1,23 @@
 #!/bin/bash
 
-# modified from http://brunohq.com/journal/speed-project-git-hook-for-asana/
+# modified from https://github.com/Spaceman-Labs/asana-post-commit
 
 # -----------------------
 # necessary configuration:
 # git config --global user.asana-key "MY_ASANA_API_KEY" (http://app.asana.com/-/account_api)
 #
-# not necessary at the moment, but may be useful in future revisions of the script:
-# git config --local user.asana-workspace "WORKSPACE_ID" (found in the URL)
-# git config --local user.asana-project "PROJECT_ID" (found in the URL)
+# Note that this version of the script assumes that you are using Bitbucket.
 # -----------------------
 
 apikey=$(git config user.asana-key)
 if [ $apikey == '' ] ; then exit 0; fi
+
+origin_url=$(git config --get remote.origin.url)
+repo_path_pattern='.*\.\w+[:\/](.+)\.git'
+if [[ "$origin_url" =~ [:\/](.+)\.git ]]; then
+    repo_url=${BASH_REMATCH[1]}
+    repo_url="https://bitbucket.org/${repo_url}/"
+fi
 
 # hold the closed ticket numbers
 declare -a closed
@@ -31,9 +36,8 @@ and_pattern='([Aa]nd|&)'
 # get the checkin comment for parsing
 comment=$(git log --pretty=format:"%s %b" -n1)
 repo=${PWD##*/}
-print_comment=$(git log --pretty=format:"Just committed %h with message:
-\"%s\"
-to repository $repo" -n1)
+print_comment=$(git log --pretty=format:"Referenced from commit $repo_url%H:
+\"%s\"" -n1)
 
 # break the commit comment down into words
 IFS=' ' read -a words <<< "$comment"
@@ -56,6 +60,8 @@ do
     fi
 done
 
+echo "Submitting to asana..."
+echo ${print_commment}
 # touch the stories we've referenced
 for element in "${referenced[@]}"
 do
